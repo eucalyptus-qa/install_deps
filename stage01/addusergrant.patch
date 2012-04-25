@@ -1,0 +1,56 @@
+--- a/boto/s3/acl.py	2010-05-24 08:55:11.000000000 -0700
++++ b/boto/s3/acl.py	2011-07-08 08:59:58.000000000 -0700
+@@ -86,8 +86,8 @@
+                       email_address=email_address)
+         self.grants.append(grant)
+ 
+-    def add_user_grant(self, permission, user_id):
+-        grant = Grant(permission=permission, type='CanonicalUser', id=user_id)
++    def add_user_grant(self, permission, user_id, display_name=None):
++        grant = Grant(permission=permission, type='CanonicalUser', id=user_id, display_name=display_name)
+         self.grants.append(grant)
+ 
+     def startElement(self, name, attrs, connection):
+--- a/boto/s3/key.py	2010-05-24 08:55:11.000000000 -0700
++++ b/boto/s3/key.py	2011-07-08 09:00:08.000000000 -0700
+@@ -783,7 +783,7 @@
+         policy.acl.add_email_grant(permission, email_address)
+         self.set_acl(policy)
+ 
+-    def add_user_grant(self, permission, user_id):
++    def add_user_grant(self, permission, user_id, display_name=None):
+         """
+         Convenience method that provides a quick way to add a canonical user grant to a key.
+         This method retrieves the current ACL, creates a new grant based on the parameters
+@@ -800,5 +800,5 @@
+                         the permission to.
+         """
+         policy = self.get_acl()
+-        policy.acl.add_user_grant(permission, user_id)
++        policy.acl.add_user_grant(permission, user_id, display_name)
+         self.set_acl(policy)
+--- a/boto/s3/bucket.py	2010-05-24 08:55:11.000000000 -0700
++++ b/boto/s3/bucket.py	2011-07-08 09:35:59.000000000 -0700
+@@ -528,7 +528,7 @@
+             for key in self:
+                 key.add_email_grant(permission, email_address, headers=headers)
+ 
+-    def add_user_grant(self, permission, user_id, recursive=False, headers=None):
++    def add_user_grant(self, permission, user_id, recursive=False, headers=None, display_name=None):
+         """
+         Convenience method that provides a quick way to add a canonical user grant to a bucket.
+         This method retrieves the current ACL, creates a new grant based on the parameters
+@@ -554,11 +554,11 @@
+         if permission not in S3Permissions:
+             raise S3PermissionsError('Unknown Permission: %s' % permission)
+         policy = self.get_acl(headers=headers)
+-        policy.acl.add_user_grant(permission, user_id)
++        policy.acl.add_user_grant(permission, user_id, display_name=display_name)
+         self.set_acl(policy, headers=headers)
+         if recursive:
+             for key in self:
+-                key.add_user_grant(permission, user_id, headers=headers)
++                key.add_user_grant(permission, user_id, display_name=display_name)
+ 
+     def list_grants(self, headers=None):
+         policy = self.get_acl(headers=headers)
